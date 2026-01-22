@@ -11,3 +11,10 @@ create table if not exists documents (
   updated_at timestamptz
 );
 
+create or replace view documents_with_storage_path
+with (security_invoker=true)
+as
+  select documents.*, storage.objects.name as storage_object_path
+  from documents
+  join storage.objects
+    on storage.objects.id = documents.storage_object_id;
