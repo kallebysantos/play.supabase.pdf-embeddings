@@ -1,4 +1,5 @@
 import { Flow } from "@pgflow/dsl";
+import { embed } from "../_shared/ai/embedder.ts";
 import { convertToMarkdown } from "../_shared/ai/markdown-converter.ts";
 import { getDatabase } from "../_shared/supabase/service.ts";
 import { IS_LOCAL_ENV } from "../_shared/supabase/config.ts";
@@ -88,7 +89,7 @@ export const ProcessDocuments = new Flow<Input>({
       }
     },
   )
-  .step(
+  .array(
     { slug: "splitChunks", dependsOn: ["toMarkdown"] },
     async (deps, ctx) => {
       const flowInput = await ctx.flowInput;
@@ -110,4 +111,24 @@ export const ProcessDocuments = new Flow<Input>({
 
       return savedChunks;
     },
-  );
+  )
+  .map({ slug: "embeddingChunks", array: "splitChunks" }, async (chunk) => {
+    const embedding = await embed({ text: chunk.content });
+    return embedding.data;
+  })
+  .step({
+    slug: "saveEmbeddings",
+    dependsOn: ["splitChunks", "embeddingChunks"],
+  }, async (deps, ctx) => {
+    const flowInput = await ctx.flowInput;
+    const rows = deps.splitChunks.map((chunk, idx) => ({
+      ...chunk,
+      document_id: flowInput.documentId,
+      embedding: JSON.stringify(deps.embeddingChunks[idx]),
+    }));
+
+    await db
+      .from("documents_chunks")
+      .upsert(rows)
+      .throwOnError();
+  });
