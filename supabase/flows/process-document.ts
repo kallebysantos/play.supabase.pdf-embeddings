@@ -114,21 +114,12 @@ export const ProcessDocuments = new Flow<Input>({
   )
   .map({ slug: "embeddingChunks", array: "splitChunks" }, async (chunk) => {
     const embedding = await embed({ text: chunk.content });
-    return embedding.data;
-  })
-  .step({
-    slug: "saveEmbeddings",
-    dependsOn: ["splitChunks", "embeddingChunks"],
-  }, async (deps, ctx) => {
-    const flowInput = await ctx.flowInput;
-    const rows = deps.splitChunks.map((chunk, idx) => ({
-      ...chunk,
-      document_id: flowInput.documentId,
-      embedding: JSON.stringify(deps.embeddingChunks[idx]),
-    }));
 
     await db
       .from("documents_chunks")
-      .upsert(rows)
+      .update({ embedding: JSON.stringify(embedding.data) })
+      .eq("id", chunk.id)
       .throwOnError();
+
+    return embedding.data;
   });
