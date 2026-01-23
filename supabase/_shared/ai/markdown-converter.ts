@@ -1,14 +1,21 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { generateText } from "npm:ai@6.0.48";
-import { createOpenAI } from "npm:@ai-sdk/openai";
+// import { createOpenAI } from "npm:@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "npm:@ai-sdk/google";
 
+/*
 const aiProvider = createOpenAI({
   name: "supabase-ai-provider",
   baseURL: Deno.env.get("OPENAI_URL") || "https://api.openai.com/v1",
   apiKey: Deno.env.get("OPENAI_API_KEY"),
 });
+*/
+const aiProvider = createGoogleGenerativeAI({
+  name: "supabase-ai-provider",
+  apiKey: Deno.env.get("GEMINI_API_KEY"),
+});
 
-const aiModel = Deno.env.get("OPENAI_MARKDOWN_MODEL") || "gpt-5";
+const aiModel = Deno.env.get("OPENAI_MARKDOWN_MODEL") || "gemini-2.5-flash";
 
 export const SYSTEM_PROMPT = `#CONTEXT:
 - You're a digital assistant of Supabase document convension app.
