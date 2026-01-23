@@ -1,10 +1,8 @@
 import { Flow } from "@pgflow/dsl";
-import {
-  convertToMarkdown,
-  MarkdownConverterPayload,
-} from "../_shared/ai/markdown-converter.ts";
+import { convertToMarkdown } from "../_shared/ai/markdown-converter.ts";
 import { getDatabase } from "../_shared/supabase/service.ts";
 import { IS_LOCAL_ENV } from "../_shared/supabase/config.ts";
+import { processMarkdown } from "../_shared/utils/markdown-splitter.ts";
 
 const db = getDatabase({ serviceRole: true });
 if (typeof db === "string") throw new Error(db);
@@ -83,10 +81,33 @@ export const ProcessDocuments = new Flow<Input>({
           throw new Error(updateDocumentError.message);
         }
 
-        return markdownContent;
+        return { content: markdownContent };
       } catch (e) {
         console.error(e);
         throw e;
       }
+    },
+  )
+  .step(
+    { slug: "splitChunks", dependsOn: ["toMarkdown"] },
+    async (deps, ctx) => {
+      const flowInput = await ctx.flowInput;
+      const processed = processMarkdown(deps.toMarkdown.content);
+      const chunks = processed.sections.map((section) => ({
+        document_id: flowInput.documentId,
+        content: section.content.trim(),
+      }));
+
+      const { data: savedChunks, error: saveChunksError } = await db
+        .from("documents_chunks")
+        .insert(chunks)
+        .select("id, content");
+
+      if (!savedChunks || saveChunksError) {
+        console.error("saveChunksError", saveChunksError);
+        throw new Error(saveChunksError?.message);
+      }
+
+      return savedChunks;
     },
   );

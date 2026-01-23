@@ -64,6 +64,42 @@ export type Database = {
         }
         Relationships: []
       }
+      documents_chunks: {
+        Row: {
+          content: string
+          document_id: string | null
+          embedding: unknown
+          id: number
+        }
+        Insert: {
+          content: string
+          document_id?: string | null
+          embedding?: unknown
+          id?: number
+        }
+        Update: {
+          content?: string
+          document_id?: string | null
+          embedding?: unknown
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents_with_storage_path"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       documents_with_storage_path: {

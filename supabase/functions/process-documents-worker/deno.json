@@ -7,6 +7,7 @@
     "@pgflow/dsl/supabase": "npm:@pgflow/dsl@0.13.2/supabase",
     "@pgflow/edge-worker": "jsr:@pgflow/edge-worker@0.13.2",
     "@pgflow/edge-worker/": "jsr:@pgflow/edge-worker@0.13.2/",
-    "@pgflow/edge-worker/_internal": "jsr:@pgflow/edge-worker@0.13.2/_internal"
+    "@pgflow/edge-worker/_internal": "jsr:@pgflow/edge-worker@0.13.2/_internal",
+    "https://esm.sh/v132/decode-named-character-reference@1.0.2/esnext/decode-named-character-reference.mjs": "https://esm.sh/decode-named-character-reference@1.0.2?target=deno"
   }
 }
